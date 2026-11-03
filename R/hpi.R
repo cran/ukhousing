@@ -32,15 +32,15 @@
 #' @examples
 #' \donttest{
 #' op <- options(ukhousing.cache_dir = tempdir())
+#' try({
+#'   # All UK average house prices
+#'   uk <- ukh_hpi("united-kingdom")
+#'   head(uk)
 #'
-#' # All UK average house prices
-#' uk <- ukh_hpi("united-kingdom")
-#' head(uk)
-#'
-#' # London, last 10 years
-#' london <- ukh_hpi("london", from = "2016-01-01")
-#' tail(london)
-#'
+#'   # London, last 10 years
+#'   london <- ukh_hpi("london", from = "2016-01-01")
+#'   tail(london)
+#' })
 #' options(op)
 #' }
 ukh_hpi <- function(region, from = NULL, to = NULL, refresh = FALSE) {
@@ -55,7 +55,7 @@ ukh_hpi <- function(region, from = NULL, to = NULL, refresh = FALSE) {
   )
   cache_path <- file.path(ukh_cache_dir(), cache_key)
 
-  if (!file.exists(cache_path) || refresh) {
+  if (ukh_cache_stale(cache_path, refresh)) {
     cli_inform(c("i" = "Downloading UK HPI for {.val {slug}}..."))
     url <- .hpi_csv_url(slug, dr$from, dr$to)
     ukh_download(url, cache_path)
@@ -97,14 +97,14 @@ ukh_hpi <- function(region, from = NULL, to = NULL, refresh = FALSE) {
 #' @examples
 #' \donttest{
 #' op <- options(ukhousing.cache_dir = tempdir())
-#'
-#' prices <- ukh_hpi_compare(
-#'   c("london", "manchester", "newcastle-upon-tyne"),
-#'   measure = "avg_price",
-#'   from = "2015-01-01"
-#' )
-#' head(prices)
-#'
+#' try({
+#'   prices <- ukh_hpi_compare(
+#'     c("london", "manchester", "newcastle-upon-tyne"),
+#'     measure = "avg_price",
+#'     from = "2015-01-01"
+#'   )
+#'   head(prices)
+#' })
 #' options(op)
 #' }
 ukh_hpi_compare <- function(regions, measure = "avg_price",
@@ -181,9 +181,13 @@ ukh_hpi_compare <- function(regions, measure = "avg_price",
     hpi = get_col(raw, c("House price index", "HousePriceIndex", "^HPI$")),
     avg_price = get_col(raw, c("Average price$", "Average price All property",
                                "AveragePrice")),
-    pct_change_monthly = get_col(raw, c("Monthly change", "PercentageChange",
+    # Current downloads label these "Percentage change (monthly) All
+    # property types"; the other patterns cover earlier layouts.
+    pct_change_monthly = get_col(raw, c("^Percentage change \\(monthly\\) All property types$",
+                                        "Monthly change", "PercentageChange",
                                         "% change monthly")),
-    pct_change_annual = get_col(raw, c("Annual change", "PercentageAnnualChange",
+    pct_change_annual = get_col(raw, c("^Percentage change \\(yearly\\) All property types$",
+                                       "Annual change", "PercentageAnnualChange",
                                        "% change annual")),
     sales_volume = get_col(raw, c("Sales volume", "SalesVolume")),
     avg_price_detached = get_col(raw, c("Average price Detached",
@@ -202,7 +206,8 @@ ukh_hpi_compare <- function(regions, measure = "avg_price",
                                          "AveragePriceNewBuild")),
     avg_price_existing = get_col(raw, c("Average price Existing",
                                         "AveragePriceExistingProperty")),
-    avg_price_first_time_buyer = get_col(raw, c("Average price First time buyer",
+    avg_price_first_time_buyer = get_col(raw, c("Average price First-time buyer",
+                                                "Average price First time buyer",
                                                 "AveragePriceFirstTimeBuyer")),
     avg_price_former_owner = get_col(raw, c("Average price Former owner",
                                             "AveragePriceFormerOwnerOccupier")),
@@ -254,8 +259,10 @@ ukh_hpi_compare <- function(regions, measure = "avg_price",
 #' @examples
 #' \donttest{
 #' op <- options(ukhousing.cache_dir = tempdir())
-#' tx <- ukh_transactions("england", from = "2020-01-01")
-#' head(tx)
+#' try({
+#'   tx <- ukh_transactions("england", from = "2020-01-01")
+#'   head(tx)
+#' })
 #' options(op)
 #' }
 ukh_transactions <- function(region, from = NULL, to = NULL, refresh = FALSE) {

@@ -20,8 +20,11 @@ ukh_ppd(
 \item{year}{Integer. Year of transactions to fetch. Defaults to the
 current calendar year.}
 
-\item{la}{Optional character. Local authority name (matched
-case-insensitively against the \code{district} field).}
+\item{la}{Optional character. Local authority name, matched against
+the \code{district} field ignoring case, spacing and a leading "City of"
+or "The", so \code{"Westminster"} finds "CITY OF WESTMINSTER" and
+\code{"Vale of Glamorgan"} finds "THE VALE OF GLAMORGAN". The City of
+London keeps its prefix, so \code{"London"} does not match it.}
 
 \item{postcode}{Optional character. Postcode or postcode prefix.}
 
@@ -65,20 +68,20 @@ multi-year queries, call the function once per year or use
 \examples{
 \donttest{
 op <- options(ukhousing.cache_dir = tempdir())
-
-# Westminster flats sold in 2024
-wm <- ukh_ppd(2024, la = "Westminster", property_type = "flat")
-head(wm)
-
+try({
+  # Westminster flats sold in 2024
+  wm <- ukh_ppd(2024, la = "Westminster", property_type = "flat")
+  head(wm)
+})
 options(op)
 }
 }
 \seealso{
-Other price paid data: 
-\code{\link{ukh_ppd_address}()},
-\code{\link{ukh_ppd_bulk}()},
-\code{\link{ukh_ppd_summary}()},
-\code{\link{ukh_ppd_transaction}()},
-\code{\link{ukh_ppd_years}()}
+Other price paid data:
+\code{\link[=ukh_ppd_address]{ukh_ppd_address()}},
+\code{\link[=ukh_ppd_bulk]{ukh_ppd_bulk()}},
+\code{\link[=ukh_ppd_summary]{ukh_ppd_summary()}},
+\code{\link[=ukh_ppd_transaction]{ukh_ppd_transaction()}},
+\code{\link[=ukh_ppd_years]{ukh_ppd_years()}}
 }
 \concept{price paid data}

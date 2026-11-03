@@ -4,17 +4,13 @@
 \alias{ukh_sparql}
 \title{Run a SPARQL query}
 \usage{
-ukh_sparql(
-  query,
-  endpoint = c("land-registry", "opendatacommunities"),
-  timeout = 60L
-)
+ukh_sparql(query, endpoint = "land-registry", timeout = 60L)
 }
 \arguments{
 \item{query}{Character. A SPARQL query string.}
 
-\item{endpoint}{Character. One of \code{"land-registry"} (default),
-\code{"opendatacommunities"}, or a full URL to any SPARQL endpoint.}
+\item{endpoint}{Character. \code{"land-registry"} (default), or a full URL
+to any SPARQL endpoint.}
 
 \item{timeout}{Integer. Request timeout in seconds. Default \code{60}.}
 }
@@ -29,30 +25,30 @@ covered by the dedicated helpers, including custom HPI aggregations
 and Price Paid Data lookups by postcode.
 }
 \details{
-Both endpoints are free and require no authentication. The Land
-Registry endpoint covers HPI and Price Paid Data; the Open Data
-Communities endpoint covers 300+ housing-market datasets published
-by MHCLG.
+The Land Registry endpoint is free, requires no authentication, and
+covers HPI and Price Paid Data. MHCLG's Open Data Communities
+endpoint was retired in 2026, so \code{endpoint = "opendatacommunities"}
+now stops with an error.
 }
 \examples{
 \donttest{
 op <- options(ukhousing.cache_dir = tempdir())
-
-# All HPI observations for Westminster in January 2020
-q <- '
-PREFIX ukhpi: <http://landregistry.data.gov.uk/def/ukhpi/>
-SELECT ?hpi ?avgPrice WHERE {
-  <http://landregistry.data.gov.uk/data/ukhpi/region/city-of-westminster/month/2020-01>
-    ukhpi:housePriceIndex ?hpi ;
-    ukhpi:averagePrice    ?avgPrice .
-}'
-ukh_sparql(q)
-
+try({
+  # All HPI observations for Westminster in January 2020
+  q <- '
+  PREFIX ukhpi: <http://landregistry.data.gov.uk/def/ukhpi/>
+  SELECT ?hpi ?avgPrice WHERE {
+    <http://landregistry.data.gov.uk/data/ukhpi/region/city-of-westminster/month/2020-01>
+      ukhpi:housePriceIndex ?hpi ;
+      ukhpi:averagePrice    ?avgPrice .
+  }'
+  ukh_sparql(q)
+})
 options(op)
 }
 }
 \seealso{
-Other helpers: 
-\code{\link{ukh_regions}()}
+Other helpers:
+\code{\link[=ukh_regions]{ukh_regions()}}
 }
 \concept{helpers}

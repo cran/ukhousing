@@ -1,3 +1,81 @@
+# ukhousing 0.2.0
+
+## Energy Performance Certificate functions are defunct
+
+MHCLG retired the EPC Open Data service (`epc.opendatacommunities.org`)
+that `ukh_epc_search()`, `ukh_epc_certificate()`, `ukh_epc_summary()`,
+`ukh_epc_bulk()`, `ukh_epc_recommendations_summary()` and
+`ukh_epc_set_key()` used. Its API and bulk downloads now redirect to the
+home page of the replacement, the Get energy performance of buildings
+data service, so every one of these functions failed in 0.1.0.
+
+The replacement is not a drop-in: it needs a GOV.UK One Login account
+and a bearer token, offers no per-local-authority bulk files and no
+property type or built form filters, and returns far fewer fields from
+a search. Rather than ship a thinner, credential-bound version, the six
+functions now stop with an error that points to the new service:
+<https://get-energy-performance-data.communities.gov.uk/>.
+
+## `ukh_sparql()` no longer offers the Open Data Communities endpoint
+
+MHCLG also retired Open Data Communities. `opendatacommunities.org` now
+redirects to a site with no SPARQL service, so
+`ukh_sparql(endpoint = "opendatacommunities")` returned an error. It now
+says the endpoint has been retired. The Land Registry endpoint and
+custom endpoint URLs work as before.
+
+## `ukh_pipr()` returns data again, and current data
+
+`ukh_pipr()` returned an empty data frame with a warning. The ONS stopped
+offering a JSON download for the rental index on its Beta API, so the
+function fell back to a metadata link that holds no observations. That
+API copy of the series also stopped at January 2024.
+
+The function now reads the ONS monthly workbook, Price Index of Private
+Rents, UK: monthly price statistics, which runs to the latest month.
+This is a richer source, and the output changes accordingly:
+
+* About 350 areas (UK, countries, English regions and local
+  authorities) instead of 15.
+* New columns `gss_code`, `parent_region`, `monthly_change_pct`,
+  `annual_change_pct` and `rental_price_gbp` (average monthly rent).
+* A new `property` argument selects a bedroom count or property type.
+  It comes before `refresh`, so pass `refresh` by name.
+* The index is on the ONS base, January 2023 = 100.
+* The workbook is read with \pkg{readxl}, now in Suggests.
+
+## `ukh_hpi()` percentage changes were always missing
+
+Land Registry now labels the change columns "Percentage change (monthly)
+All property types" and "Percentage change (yearly) All property types",
+which none of the package's column patterns matched, so
+`pct_change_monthly` and `pct_change_annual` were `NA` for every region
+and month, and `ukh_hpi_compare(measure = "pct_change_annual")` returned
+nothing but `NA`. First-time-buyer prices were missing for the same reason
+("First-time buyers" is now hyphenated). Both are mapped again. Cash,
+mortgage and buyer-type prices remain `NA` for `"united-kingdom"` because
+Land Registry does not publish those splits for the UK aggregate.
+
+## `ukh_ppd(la = )` matches the names people use
+
+Land Registry records some districts with a prefix ("CITY OF
+WESTMINSTER", "CITY OF BRISTOL", "THE VALE OF GLAMORGAN"), and `la` had
+to match exactly, so the documented example `ukh_ppd(2024, la =
+"Westminster")` returned no rows. `la` now ignores a leading "City of" or
+"The" (except for the City of London, so `"London"` does not quietly
+return the Square Mile alone). When nothing matches, a warning suggests
+the closest district names. This also applies to `ukh_ppd_summary()` and
+`ukh_ppd_years()`.
+
+## Monthly series no longer go stale in the cache
+
+`ukh_hpi()`, `ukh_transactions()` and `ukh_pipr()` reused a cached
+download indefinitely, so a user who had called them once never saw a
+later monthly release unless they passed `refresh = TRUE`. A cached copy
+is now fetched again once it is more than 7 days old; set
+`options(ukhousing.cache_max_age = <days>)` to change this. Price Paid
+bulk downloads are unchanged and still only re-fetched on request.
+
 # ukhousing 0.1.0
 
 * Initial CRAN release.
